@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,11 +8,11 @@ from db.database import SessionLocal
 from core.matcher import TarpSpaceMatcher
 
 DEMO_QUERIES = [
-    "I need a React developer for a fintech project",
-    "Looking for a mid-century modern couch under $500",
-    "Need a machine learning study partner",
-    "Selling a vintage leather sofa in good condition",
-    "Looking for a plumber in Houston this weekend",
+    "I need someone to teach me guitar in Houston",
+    "I want to learn coding in Lagos",
+    "Looking for a personal trainer in Houston",
+    "I want to connect with musicians in Lagos",
+    "I need a chef to teach me cooking in Houston",
 ]
 
 
@@ -22,7 +21,7 @@ def run_query(query, matcher):
     print(f"QUERY: {query}")
     result = matcher.match(query)
     print(f"Latency: {result['latency_ms']}ms")
-    print(f"Search Run ID: {result['search_run_id']}")
+    print(f"Extracted: location={result['extracted'].get('location')} | activity={result['extracted'].get('activity')}")
     print(f"{'-'*70}")
 
     has_validation = any(r.get("match") is not None for r in result["results"])
@@ -33,18 +32,19 @@ def run_query(query, matcher):
 
         print(f"MATCHES ({len(matched)}):")
         for r in matched:
-            print(f"  [{r['id'][:8]}] score: {r.get('score', 0):.2f} | {r.get('reason', '')}")
+            print(f"  [{r['id'][:8]}] {r.get('name', '')} | score: {r.get('score', 0):.2f}")
+            print(f"  {r.get('reason', '')}")
             if r.get("caveat"):
-                print(f"    caveat: {r['caveat']}")
+                print(f"  Note: {r['caveat']}")
 
         if not_matched:
             print(f"\nNOT A MATCH ({len(not_matched)}):")
             for r in not_matched:
-                print(f"  [{r['id'][:8]}] {r.get('reason', '')}")
+                print(f"  [{r['id'][:8]}] {r.get('name', '')} | {r.get('reason', '')}")
     else:
-        print("VECTOR-ONLY (no LLM validation — check OPENROUTER_API_KEY):")
+        print("VECTOR-ONLY (no LLM validation):")
         for r in result["results"]:
-            print(f"  [{r['id'][:8]}] {r.get('name', '')} | similarity: {r['similarity']:.3f}")
+            print(f"  [{r['id'][:8]}] {r.get('name', '')} | {r.get('activity', '')} | {r.get('location_raw', '')}")
 
     print(f"{'='*70}")
 
@@ -52,7 +52,7 @@ def run_query(query, matcher):
 def main():
     db = SessionLocal()
     try:
-        print("Loading matcher (first run downloads the model ~1.3GB)...")
+        print("Loading matcher...")
         matcher = TarpSpaceMatcher(db)
 
         if "--demo" in sys.argv:
@@ -62,12 +62,10 @@ def main():
             query = " ".join(a for a in sys.argv[1:] if not a.startswith("--"))
             if query:
                 run_query(query, matcher)
-            else:
-                print("Usage: python test_match.py \"your query here\"")
-                print("       python test_match.py --demo")
         else:
-            print("Usage: python test_match.py \"your query here\"")
-            print("       python test_match.py --demo")
+            print("Usage:")
+            print('  python test_match.py "your query"')
+            print('  python test_match.py --demo')
     finally:
         db.close()
 
