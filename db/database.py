@@ -26,7 +26,7 @@ def seed_inventory(db, model=None):
         log.info(f"Inventory already has {result} agents — skipping seed")
         return
 
-    from data.agents import AGENTS
+    from data.profiles import AGENTS
     log.info(f"Seeding {len(AGENTS)} agents into inventory...")
 
     if model is None:
