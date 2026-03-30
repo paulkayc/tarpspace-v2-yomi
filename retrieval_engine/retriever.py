@@ -6,7 +6,7 @@ from sqlalchemy import text
 log = logging.getLogger(__name__)
 
 EMBED_MODEL = "BAAI/bge-large-en-v1.5"
-ACTIVITY_THRESHOLD = 0.3
+ACTIVITY_THRESHOLD = 0.5
 
 _model = None
 
